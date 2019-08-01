@@ -30,6 +30,7 @@ jmh {
     humanOutputFile = null
     fork = 1
     iterations = 5
+    forceGC = true
     warmupIterations = 5
     jvmArgs = ['-Xmx10G', '-Xms10G']
 }

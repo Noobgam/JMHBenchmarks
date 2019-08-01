@@ -22,7 +22,7 @@ public class ReadOnlyMapBenchmark {
         @Param({"false", "true"})
         public boolean preSize;
 
-        @Param({"10000000", "1000000", "1000", "10"})
+        @Param({"10"})
         public int size;
 
         public transient int values[];
@@ -31,6 +31,16 @@ public class ReadOnlyMapBenchmark {
         public void setup() {
             values = ThreadLocalRandom.current().ints(2 * size).toArray();
         }
+    }
+
+    static final int tableSizeFor(int cap) {
+        int n = cap - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+        return n + 1;
     }
 
     // sanity check, should underperform all the time.
@@ -42,7 +52,7 @@ public class ReadOnlyMapBenchmark {
         Map<Integer, Integer> map;
         if (state.preSize) {
             map = new HashMap<>(
-                    (int) Math.ceil(state.size / state.loadFactor) + 1,
+                    tableSizeFor(state.size),
                     state.loadFactor
             );
         } else {
