@@ -16,7 +16,7 @@ public class ReadOnlyMapBenchmark {
 
     @State(Scope.Thread)
     public static class MyState {
-        @Param({"0.2", "0.5", "0.7"})
+        @Param({"0.5", "0.7"})
         public float loadFactor;
 
         @Param({"false", "true"})
