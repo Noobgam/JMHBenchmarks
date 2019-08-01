@@ -22,7 +22,7 @@ public class ReadOnlyMapBenchmark {
         @Param({"false", "true"})
         public boolean preSize;
 
-        @Param({"10", "1000", "1000000", "100000000"})
+        @Param({"10000000", "1000000", "1000", "10"})
         public int size;
 
         public transient int values[];
