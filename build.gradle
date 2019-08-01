@@ -25,11 +25,12 @@ apply plugin: 'me.champeau.gradle.jmh'
 
 jmhJar.baseName = 'readonly-map'
 
-subprojects {
-    apply plugin: 'me.champeau.gradle.jmh'
-
-    jmh {
-        include = 'noobgam\\.me\\.ReadOnlyMapBenchmark.*'
-        humanOutputFile = null
-    }
+jmh {
+    include = 'noobgam\\.me\\.ReadOnlyMapBenchmark.*'
+    humanOutputFile = null
+    fork = 1
+    iterations = 1
+    threads = 4
+    warmupIterations = 1
+    jvmArgs = ['-client']
 }
