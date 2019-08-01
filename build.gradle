@@ -29,6 +29,7 @@ jmh {
     include = 'noobgam\\.me\\.ReadOnlyMapBenchmark.*'
     humanOutputFile = null
     fork = 1
+    threads = 10
     iterations = 5
     forceGC = true
     warmupIterations = 5

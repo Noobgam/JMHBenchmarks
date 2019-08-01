@@ -1,5 +1,6 @@
 package noobgam.me;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -8,81 +9,92 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static it.unimi.dsi.fastutil.HashCommon.arraySize;
 
 public class ReadOnlyMapBenchmark {
 
+    static void shuffleArray(int[] ar)
+    {
+        Random rnd = ThreadLocalRandom.current();
+        for (int i = ar.length - 1; i > 0; i--)
+        {
+            int index = rnd.nextInt(i + 1);
+            int a = ar[index];
+            ar[index] = ar[i];
+            ar[i] = a;
+        }
+    }
+
     @State(Scope.Thread)
     public static class MyState {
-        @Param({"0.5", "0.7"})
+
+        @Param({"false"})
+        public boolean robinHood;
+
+        @Param({"0.5"})
         public float loadFactor;
 
-        @Param({"false", "true"})
-        public boolean preSize;
-
-        @Param({"10"})
+        @Param({"100"})
         public int size;
 
-        public transient int values[];
+
+        Int2IntMap map;
+        Map<Integer, Integer> map2;
+
+        int[] queries;
 
         @Setup(Level.Iteration)
         public void setup() {
-            values = ThreadLocalRandom.current().ints(2 * size).toArray();
+            int[] keys
+                    = ThreadLocalRandom.current().ints(size).toArray();
+            int[] values
+                    = ThreadLocalRandom.current().ints(size).toArray();
+            queries = Arrays.copyOf(keys, size);
+            shuffleArray(queries);
+            Int2IntMap map = new Int2IntOpenHashMap(
+                    size,
+                    loadFactor
+            );
+            for (int i = 0; i < size; ++i) {
+                map.put(keys[i], values[i]);
+            }
+
+            this.map2 = this.map = map;
         }
     }
 
-    static final int tableSizeFor(int cap) {
-        int n = cap - 1;
-        n |= n >>> 1;
-        n |= n >>> 2;
-        n |= n >>> 4;
-        n |= n >>> 8;
-        n |= n >>> 16;
-        return n + 1;
-    }
-
-    // sanity check, should underperform all the time.
     @Benchmark
-    public void javaCollections(
+    public void fastUtilInteger(
             MyState state,
             Blackhole blackhole
     ) {
-        Map<Integer, Integer> map;
-        if (state.preSize) {
-            map = new HashMap<>(
-                    tableSizeFor(state.size),
-                    state.loadFactor
-            );
-        } else {
-            map = new HashMap<>(16, state.loadFactor);
+        for (int query : state.queries) {
+            Integer res = state.map2.get(query);
+            blackhole.consume(res);
+            if (res == null) {
+                blackhole.consume(state.map2);
+            }
         }
-        for (int i = 0; i < state.size; ++i) {
-            map.put(state.values[2 * i], state.values[2 * i + 1]);
-        }
-        blackhole.consume(map);
     }
 
-    // sanity check, should underperform all the time.
     @Benchmark
-    public void fastutil(
+    public void fastUtilInt(
             MyState state,
             Blackhole blackhole
     ) {
-        Map<Integer, Integer> map;
-        if (state.preSize) {
-            map = new Int2IntOpenHashMap(
-                    state.size,
-                    state.loadFactor
-            );
-        } else {
-            map = new Int2IntOpenHashMap(16, state.loadFactor);
+        final int defretval = state.map.defaultReturnValue();
+        for (int query : state.queries) {
+            int res = state.map.get(query);
+            blackhole.consume(res);
+            if (defretval == res) {
+                blackhole.consume(state.map);
+            }
         }
-        for (int i = 0; i < state.size; ++i) {
-            map.put(state.values[2 * i], state.values[2 * i + 1]);
-        }
-        blackhole.consume(map);
     }
 
     public static void main(String[] args) throws Exception {
