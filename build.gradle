@@ -1,0 +1,35 @@
+plugins {
+  id "me.champeau.gradle.jmh" version "0.4.8"
+}
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+
+    group = 'me.noobgam'
+    version = '1.0-SNAPSHOT'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        jcenter()
+    }
+}
+
+dependencies {
+    compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.1.0'
+}
+
+apply plugin: 'me.champeau.gradle.jmh'
+
+jmhJar.baseName = 'readonly-map'
+
+subprojects {
+    apply plugin: 'me.champeau.gradle.jmh'
+
+    jmh {
+        include = 'noobgam\\.me\\.ReadOnlyMapBenchmark.*'
+        humanOutputFile = null
+    }
+}
