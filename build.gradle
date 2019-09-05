@@ -28,10 +28,10 @@ jmhJar.baseName = 'readonly-map'
 jmh {
     include = 'noobgam\\.me\\.ReadOnlyMapBenchmark.*'
     humanOutputFile = null
-    fork = 1
+    fork = 2
     threads = 10
-    iterations = 5
+    iterations = 20
     forceGC = true
-    warmupIterations = 5
+    warmupIterations = 10
     jvmArgs = ['-Xmx10G', '-Xms10G']
 }
