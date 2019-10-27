@@ -1,113 +1,147 @@
 package noobgam.me;
 
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
-import org.openjdk.jmh.runner.Runner;
-import org.openjdk.jmh.runner.options.Options;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
-import org.openjdk.jmh.runner.options.TimeValue;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
-
-import static it.unimi.dsi.fastutil.HashCommon.arraySize;
 
 public class ReadOnlyMapBenchmark {
 
-    static void shuffleArray(int[] ar)
-    {
-        Random rnd = ThreadLocalRandom.current();
-        for (int i = ar.length - 1; i > 0; i--)
-        {
-            int index = rnd.nextInt(i + 1);
-            int a = ar[index];
-            ar[index] = ar[i];
-            ar[i] = a;
+    public static class Queries {
+
+        public final int keys[];
+        public final int values[];
+        public final int queries[];
+
+        public Queries(int generatorId, int size) {
+
+            if (generatorId == 0) {
+                // fully random
+                keys = ThreadLocalRandom.current().ints(size).toArray();
+                values = ThreadLocalRandom.current().ints(size).toArray();
+                queries = ThreadLocalRandom.current().ints(5 * size).toArray();
+            } else if (generatorId == 1) {
+                // 100% hit-rate
+                keys = ThreadLocalRandom.current().ints(size).toArray();
+                values = ThreadLocalRandom.current().ints(size).toArray();
+                ArrayList<Integer> qqq = new ArrayList<>(5 * size);
+                for (int i = 0; i < size; ++i) {
+                    for (int j = 0; j < 5; ++j) {
+                        qqq.add(keys[i]);
+                    }
+                }
+                Collections.shuffle(qqq);
+                queries = qqq.stream().mapToInt(x -> x).toArray();
+            } else {
+                throw new IllegalArgumentException();
+            }
         }
     }
 
     @State(Scope.Thread)
-    public static class MyState {
-
-        @Param({"false"})
-        public boolean robinHood;
-
-        @Param({"0.5"})
+    public static abstract class AbstractState {
+        @Param({"0.2", "0.5", "0.9"})
         public float loadFactor;
 
-        @Param({"100"})
+        @Param({"10", "1000", "10000000"})
         public int size;
 
+        @Param({"0", "1"})
+        public int generatorId;
 
-        Int2IntMap map;
-        Map<Integer, Integer> map2;
-
-        int[] queries;
+        public Queries queries;
 
         @Setup(Level.Iteration)
         public void setup() {
-            int[] keys
-                    = ThreadLocalRandom.current().ints(size).toArray();
-            int[] values
-                    = ThreadLocalRandom.current().ints(size).toArray();
-            queries = Arrays.copyOf(keys, size);
-            shuffleArray(queries);
-            Int2IntMap map = new Int2IntOpenHashMap(
-                    size,
-                    loadFactor
-            );
+            queries = new Queries(generatorId, size);
+            createAndFillMap();
+        }
+
+        public abstract void createAndFillMap();
+    }
+
+    @State(Scope.Thread)
+    public static class JDKState extends AbstractState {
+
+        public HashMap<Integer, Integer> hashMap;
+
+        @Override
+        public void createAndFillMap() {
+            int mapSize = (int)((size / loadFactor) + 1.0F);
+            hashMap = new HashMap<>(mapSize, loadFactor);
             for (int i = 0; i < size; ++i) {
-                map.put(keys[i], values[i]);
+                hashMap.put(queries.keys[i], queries.values[i]);
             }
+        }
+    }
 
-            this.map2 = this.map = map;
+    @State(Scope.Thread)
+    public static class FastUtilState extends AbstractState {
+
+        public Int2IntOpenHashMap openHashMap;
+
+        @Override
+        public void createAndFillMap() {
+            openHashMap = new Int2IntOpenHashMap(size, loadFactor);
+            for (int i = 0; i < size; ++i) {
+                openHashMap.put(queries.keys[i], queries.values[i]);
+            }
+        }
+    }
+
+    @State(Scope.Thread)
+    public static class RobinHoodState extends AbstractState {
+
+        public RobinHoodInt2IntOpenHashMap robinHoodMap;
+
+        @Override
+        public void createAndFillMap() {
+            robinHoodMap = new RobinHoodInt2IntOpenHashMap(size, loadFactor);
+            for (int i = 0; i < size; ++i) {
+                robinHoodMap.put(queries.keys[i], queries.values[i]);
+            }
+        }
+    }
+
+    // sanity check, should underperform all the time.
+    @Benchmark
+    public void javaCollections(
+            JDKState state,
+            Blackhole blackhole
+    ) {
+        for (int query : state.queries.queries) {
+            blackhole.consume(state.hashMap.get(query));
         }
     }
 
     @Benchmark
-    public void fastUtilInteger(
-            MyState state,
+    public void fastutil(
+            FastUtilState state,
             Blackhole blackhole
     ) {
-        for (int query : state.queries) {
-            Integer res = state.map2.get(query);
-            blackhole.consume(res);
-            if (res == null) {
-                blackhole.consume(state.map2);
+        for (int query : state.queries.queries) {
+            int res = state.openHashMap.get(query);
+            // box to attempt to emulate badness of jdk collections.
+            if (res == 0) {
+                blackhole.consume(null);
+            } else {
+                blackhole.consume(Integer.valueOf(res));
             }
         }
     }
 
     @Benchmark
-    public void fastUtilInt(
-            MyState state,
+    public void robinHood(
+            RobinHoodState state,
             Blackhole blackhole
     ) {
-        final int defretval = state.map.defaultReturnValue();
-        for (int query : state.queries) {
-            int res = state.map.get(query);
-            blackhole.consume(res);
-            if (defretval == res) {
-                blackhole.consume(state.map);
-            }
+        for (int query : state.queries.queries) {
+            blackhole.consume(state.robinHoodMap.get(query));
         }
     }
-
-    public static void main(String[] args) throws Exception {
-        Options options = new OptionsBuilder()
-                .include(".*" + ReadOnlyMapBenchmark.class.getSimpleName() + ".*")
-                .forks(1)
-                .warmupIterations(1)
-                .warmupTime(TimeValue.seconds(1))
-                .measurementIterations(1)
-                .measurementTime(TimeValue.seconds(1))
-                .shouldDoGC(true)
-                .build();
-        new Runner(options).run();
-    }
-
 }
+
