@@ -19,6 +19,7 @@ allprojects {
 
 dependencies {
     compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.1.0'
+    compile 'org.mongodb:mongodb-driver-sync:3.11.1'
 }
 
 apply plugin: 'me.champeau.gradle.jmh'
@@ -26,12 +27,12 @@ apply plugin: 'me.champeau.gradle.jmh'
 jmhJar.baseName = 'readonly-map'
 
 jmh {
-    include = 'noobgam\\.me\\.ReadOnlyMapBenchmark.*'
+    include = 'noobgam\\.me\\.mongo\\.MongoCodecBenchmark.*'
     humanOutputFile = null
-    fork = 1
+    fork = 0
     threads = 10
     iterations = 5
     forceGC = true
     warmupIterations = 5
-    jvmArgs = ['-Xmx10G', '-Xms10G']
+    jvmArgs = ['-Xmx1G', '-Xms1G']
 }
