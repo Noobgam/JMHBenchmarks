@@ -29,10 +29,11 @@ jmhJar.baseName = 'readonly-map'
 jmh {
     include = 'noobgam\\.me\\.mongo\\.MongoCodecBenchmark.*'
     humanOutputFile = null
-    fork = 0
-    threads = 10
+    fork = 1
+    profilers = ['org.openjdk.jmh.profile.GCProfiler']
+    threads = 1
     iterations = 5
     forceGC = true
     warmupIterations = 5
-    jvmArgs = ['-Xmx1G', '-Xms1G']
+    jvmArgs = ['-Xmx2G', '-Xms2G']
 }
