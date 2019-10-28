@@ -1,9 +1,10 @@
-jmh-gradle-example
+Dafuq is this
 ==================
 
-Sample project showcasing the JMH gradle plugin
+This is a project where I store benchmarks that I consider interesting.
+To run benchmarks enter the benchmark directory and follow the readme inside it.
 
-Clone this repository, then change directory and type:
+Most benchmarks are run by
 
 ```./gradlew jmh```
 
