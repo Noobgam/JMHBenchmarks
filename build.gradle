@@ -1,5 +1,5 @@
 plugins {
-  id "me.champeau.gradle.jmh" version "0.4.8"
+  id "me.champeau.gradle.jmh" version "0.5.0"
 }
 
 allprojects {
@@ -9,8 +9,8 @@ allprojects {
     group = 'me.noobgam'
     version = '1.0-SNAPSHOT'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = 1.13
+    targetCompatibility = 1.13
 
     repositories {
         jcenter()
@@ -20,6 +20,9 @@ allprojects {
 dependencies {
     compile group: 'it.unimi.dsi', name: 'fastutil', version: '8.1.0'
     compile 'org.mongodb:mongodb-driver-sync:3.11.1'
+    compile group: 'org.ow2.asm', name: 'asm', version: '7.0'
+    compile group: 'org.ow2.asm', name: 'asm-util', version: '7.3.1'
+
 }
 
 apply plugin: 'me.champeau.gradle.jmh'
@@ -27,7 +30,7 @@ apply plugin: 'me.champeau.gradle.jmh'
 jmhJar.baseName = 'readonly-map'
 
 jmh {
-    include = 'noobgam\\.me\\.mongo\\.MongoCodecBenchmark.*'
+    include = 'noobgam\\.me\\.either\\.EitherBenchmark.*'
     humanOutputFile = null
     fork = 1
     profilers = ['org.openjdk.jmh.profile.GCProfiler']

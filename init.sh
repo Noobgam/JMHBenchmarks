@@ -1,5 +1,5 @@
 sudo apt-get update && \
-sudo apt install openjdk-8-jdk unzip -y && \
+sudo apt install openjdk-13-jdk unzip -y && \
 sudo apt-get upgrade && \
 wget https://services.gradle.org/distributions/gradle-5.0-bin.zip -P /tmp && \
 sudo unzip -d /opt/gradle /tmp/gradle-*.zip && \

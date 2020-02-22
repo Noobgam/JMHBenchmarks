@@ -3,6 +3,7 @@ package noobgam.me.mongo;
 import com.mongodb.MongoClientSettings;
 import noobgam.me.mongo.codec.Pojo;
 import noobgam.me.mongo.codec.SelfMadeCodec;
+import noobgam.me.mongo.codec.SelfMadeCodecOptimized;
 import org.bson.*;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
@@ -44,10 +45,11 @@ public class MongoCodecBenchmark {
 
     private static final Codec<Pojo> MONGO_CODEC = CODEC_REGISTRY.get(Pojo.class);
     private static final Codec<Pojo> CUSTOM_CODEC = new SelfMadeCodec();
+    private static final Codec<Pojo> CUSTOM_FAST_CODEC = new SelfMadeCodecOptimized();
     private static final EncoderContext ENCODER_CONTEXT = EncoderContext.builder().build();
     private static final DecoderContext DECODER_CONTEXT = DecoderContext.builder().build();
 
-    @Param({"100", "1000", "10000"})
+    @Param({"1000"})
     public int values;
 
     // array of raw readers
@@ -118,9 +120,9 @@ public class MongoCodecBenchmark {
     }
 
     @Benchmark
-    public void mongo(Blackhole blackhole) {
+    public void customOptimized(Blackhole blackhole) {
         for (int i = 0; i < values; ++i) {
-            blackhole.consume(readFromRawBytes(data[i], MONGO_CODEC));
+            blackhole.consume(readFromRawBytes(data[i], CUSTOM_FAST_CODEC));
         }
     }
 
@@ -128,6 +130,13 @@ public class MongoCodecBenchmark {
     public void custom(Blackhole blackhole) {
         for (int i = 0; i < values; ++i) {
             blackhole.consume(readFromRawBytes(data[i], CUSTOM_CODEC));
+        }
+    }
+
+    @Benchmark
+    public void mongo(Blackhole blackhole) {
+        for (int i = 0; i < values; ++i) {
+            blackhole.consume(readFromRawBytes(data[i], MONGO_CODEC));
         }
     }
 

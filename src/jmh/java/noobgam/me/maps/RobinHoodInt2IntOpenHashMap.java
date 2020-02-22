@@ -1,4 +1,4 @@
-package noobgam.me;
+package noobgam.me.maps;
 
 import it.unimi.dsi.fastutil.HashCommon;
 
