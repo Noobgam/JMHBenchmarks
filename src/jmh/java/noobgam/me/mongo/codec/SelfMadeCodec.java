@@ -29,6 +29,7 @@ public final class SelfMadeCodec implements Codec<Pojo> {
                     name = reader.readString();
                     break;
                 case "friends":
+                    reader.readName();
                     reader.readStartArray();
                     friends = new HashSet<>();
                     while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
@@ -36,9 +37,7 @@ public final class SelfMadeCodec implements Codec<Pojo> {
                     }
                     reader.readEndArray();
                     break;
-                default:
-                    reader.skipValue();
-                    break;
+                default: reader.skipValue(); break;
             }
         }
         reader.readEndDocument();

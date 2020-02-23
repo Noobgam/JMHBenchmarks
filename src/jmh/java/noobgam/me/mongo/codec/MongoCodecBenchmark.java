@@ -1,9 +1,6 @@
-package noobgam.me.mongo;
+package noobgam.me.mongo.codec;
 
 import com.mongodb.MongoClientSettings;
-import noobgam.me.mongo.codec.Pojo;
-import noobgam.me.mongo.codec.SelfMadeCodec;
-import noobgam.me.mongo.codec.SelfMadeCodecOptimized;
 import org.bson.*;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
@@ -11,10 +8,7 @@ import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.codecs.pojo.annotations.BsonId;
-import org.bson.codecs.pojo.annotations.BsonProperty;
 import org.bson.io.BasicOutputBuffer;
-import org.bson.io.BsonInput;
 import org.bson.io.ByteBufferBsonInput;
 import org.bson.types.ObjectId;
 import org.openjdk.jmh.annotations.*;
@@ -25,11 +19,8 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 @State(Scope.Benchmark)
 public class MongoCodecBenchmark {
@@ -45,7 +36,6 @@ public class MongoCodecBenchmark {
 
     private static final Codec<Pojo> MONGO_CODEC = CODEC_REGISTRY.get(Pojo.class);
     private static final Codec<Pojo> CUSTOM_CODEC = new SelfMadeCodec();
-    private static final Codec<Pojo> CUSTOM_FAST_CODEC = new SelfMadeCodecOptimized();
     private static final EncoderContext ENCODER_CONTEXT = EncoderContext.builder().build();
     private static final DecoderContext DECODER_CONTEXT = DecoderContext.builder().build();
 
@@ -117,13 +107,6 @@ public class MongoCodecBenchmark {
         }
 
         return builder.toString();
-    }
-
-    @Benchmark
-    public void customOptimized(Blackhole blackhole) {
-        for (int i = 0; i < values; ++i) {
-            blackhole.consume(readFromRawBytes(data[i], CUSTOM_FAST_CODEC));
-        }
     }
 
     @Benchmark

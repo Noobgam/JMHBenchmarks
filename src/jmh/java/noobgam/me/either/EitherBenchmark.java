@@ -1,22 +1,5 @@
 package noobgam.me.either;
 
-import com.mongodb.MongoClientSettings;
-import noobgam.me.mongo.codec.Pojo;
-import noobgam.me.mongo.codec.SelfMadeCodec;
-import noobgam.me.mongo.codec.SelfMadeCodecOptimized;
-import org.bson.*;
-import org.bson.codecs.Codec;
-import org.bson.codecs.DecoderContext;
-import org.bson.codecs.EncoderContext;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.codecs.pojo.annotations.BsonId;
-import org.bson.codecs.pojo.annotations.BsonProperty;
-import org.bson.io.BasicOutputBuffer;
-import org.bson.io.BsonInput;
-import org.bson.io.ByteBufferBsonInput;
-import org.bson.types.ObjectId;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
@@ -24,12 +7,7 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 @State(Scope.Benchmark)
 public class EitherBenchmark {
